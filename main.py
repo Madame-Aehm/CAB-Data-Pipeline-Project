@@ -3,6 +3,7 @@ import os
 import requests
 import datetime as dt
 import psycopg
+import bs4
 
 
 def request_api():
@@ -18,28 +19,74 @@ def request_api():
     return tuple(values)
 
 
-def update_api_table(data):
+def scrape_for_date(date):
+  response = requests.get(f"https://www.ft.com/search?q=bitcoin&dateFrom={date}&dateTo={date}&sort=relevance")
+  scraped_date = []
+  print(response.status_code)
+  if response.status_code == 200:
+    soup = bs4.BeautifulSoup(response.text, 'lxml')
+    limit = 5
+    search_results = soup.select("div.o-teaser__content", limit=limit)
+    for result in search_results:
+      scraped = [date]
+      try:
+        scraped.append(result.select_one("a.o-teaser__tag").get_text())
+      except:
+        scraped.append("")
+      try:
+        scraped.append(result.select_one("a.js-teaser-heading-link").get_text())
+      except:
+        scraped.append("")
+      try:
+        scraped.append(result.select_one("a.js-teaser-heading-link")["href"])
+      except:
+        scraped.append("")
+      try:
+        scraped.append(result.select_one("p.o-teaser__standfirst > a").get_text())
+      except:
+        scraped.append("")
+      scraped_date.append(tuple(scraped))
+  return scraped_date
+
+
+def update_db(api_data, scraped_data):
   dbconn = os.getenv("DBCONN")
   conn = psycopg.connect(dbconn)
   cur = conn.cursor()
+
   cur.execute(
     '''
       INSERT INTO bitcoin_api_data(date, open, high, low, close, volume)
       VALUES (%s, %s, %s, %s, %s, %s);
     ''', 
-    data
+    api_data
   )
   conn.commit()
+
+  for item in scraped_data:
+    print("adding item", item)
+    cur.execute(
+      '''
+        INSERT INTO financial_times_scaped(date, tag, heading, link, teaser)
+        VALUES (%s, %s, %s, %s, %s);
+      ''', 
+      item
+    )
+  conn.commit()
+
   cur.close()
   conn.close()
-  print("update complete")
 
 
 def main():
   load_dotenv()
-  data = request_api()
-  if data != None:
-    update_api_table(data)
+  api_data = request_api()
+  if api_data != None:
+    scraped_data = scrape_for_date(api_data[0])
+    update_db(api_data, scraped_data)
+    print("update complete")
+  else:
+    print("no data")
 
 
 main()
