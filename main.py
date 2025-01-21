@@ -6,20 +6,18 @@ import psycopg
 import bs4
 
 
-def request_api():
-  api_key = os.getenv("WEATHER_APIKEY")
+def get_av_data(date):
+  api_key = os.getenv("AV_API_KEY")
   response = requests.get(f"https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=BTC&market=EUR&apikey={api_key}")
   if response.status_code == 200:
     data = response.json()
-    today = dt.datetime.today().strftime('%Y-%m-%d')
-    # print(data["Time Series (Digital Currency Daily)"][today])
-    values = [today]
-    for value in data["Time Series (Digital Currency Daily)"][today].values():
+    values = [date]
+    for value in data["Time Series (Digital Currency Daily)"][date].values():
       values.append(float(value))
     return tuple(values)
 
 
-def scrape_for_date(date):
+def get_ft_data(date):
   response = requests.get(f"https://www.ft.com/search?q=bitcoin&dateFrom={date}&dateTo={date}&sort=relevance")
   scraped_date = []
   print(response.status_code)
@@ -49,22 +47,23 @@ def scrape_for_date(date):
   return scraped_date
 
 
-def update_db(api_data, scraped_data):
+def update_db(av_data, ft_data):
   dbconn = os.getenv("DBCONN")
   conn = psycopg.connect(dbconn)
   cur = conn.cursor()
 
-  cur.execute(
-    '''
-      INSERT INTO bitcoin_api_data(date, open, high, low, close, volume)
-      VALUES (%s, %s, %s, %s, %s, %s);
-    ''', 
-    api_data
-  )
-  conn.commit()
+  if av_data != None:
+    cur.execute(
+      '''
+        INSERT INTO bitcoin_api_data(date, open, high, low, close, volume)
+        VALUES (%s, %s, %s, %s, %s, %s);
+      ''', 
+      av_data
+    )
+    conn.commit()
+    print("av data successfully added to db")
 
-  for item in scraped_data:
-    print("adding item", item)
+  for item in ft_data:
     cur.execute(
       '''
         INSERT INTO financial_times_scaped(date, tag, heading, link, teaser)
@@ -73,6 +72,7 @@ def update_db(api_data, scraped_data):
       item
     )
   conn.commit()
+  print("ft data successfully added to db")
 
   cur.close()
   conn.close()
@@ -80,13 +80,13 @@ def update_db(api_data, scraped_data):
 
 def main():
   load_dotenv()
-  api_data = request_api()
-  if api_data != None:
-    scraped_data = scrape_for_date(api_data[0])
-    update_db(api_data, scraped_data)
-    print("update complete")
-  else:
-    print("no data")
+  today = dt.datetime.today().strftime('%Y-%m-%d')
+  print("today is", today)
+  av_data = get_av_data(today)
+  ft_data = get_ft_data(today)
+  print("AV DATA", av_data, "FT DATA", ft_data)
+  update_db(av_data, ft_data)
+  print("end")
 
 
 main()
