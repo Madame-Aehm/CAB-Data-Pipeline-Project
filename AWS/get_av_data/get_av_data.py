@@ -12,4 +12,7 @@ def get_av_data():
     values = [today]
     for value in data["Time Series (Digital Currency Daily)"][today].values():
       values.append(float(value))
-    return tuple(values)
+    return {
+      "execute_id": "av_data",
+      "data": tuple(values)
+    }
