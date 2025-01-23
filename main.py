@@ -60,7 +60,6 @@ def update_db(av_data, ft_data):
       ''', 
       av_data
     )
-    conn.commit()
     print("av data successfully added to db")
 
   for item in ft_data:
@@ -71,9 +70,9 @@ def update_db(av_data, ft_data):
       ''', 
       item
     )
-  conn.commit()
   print("ft data successfully added to db")
 
+  conn.commit()
   cur.close()
   conn.close()
 
