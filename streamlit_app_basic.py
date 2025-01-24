@@ -5,10 +5,11 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime as dt, timedelta
 
-load_dotenv()
+# load_dotenv()
 
 def get_data():
-  dbconn = os.getenv("DBCONN")
+  # dbconn = os.getenv("DBCONN")
+  dbconn = st.secrets("DBCONN")
   conn = psycopg.connect(dbconn)
   cur = conn.cursor()
 
