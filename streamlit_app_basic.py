@@ -9,7 +9,7 @@ from datetime import datetime as dt, timedelta
 
 def get_data():
   # dbconn = os.getenv("DBCONN")
-  dbconn = st.secrets("DBCONN")
+  dbconn = st.secrets["DBCONN"]
   conn = psycopg.connect(dbconn)
   cur = conn.cursor()
 
