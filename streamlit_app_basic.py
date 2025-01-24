@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import psycopg
 from dotenv import load_dotenv
-import os
+# import os
 from datetime import datetime as dt, timedelta
 
 # load_dotenv()
