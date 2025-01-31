@@ -24,7 +24,7 @@ def get_data():
   ''')
   data = cur.fetchall()
   ft_data = pd.DataFrame(data, columns=["tag", "link", "heading", "teaser", "date", "sentiment"])
-  ft_data.set_index("heading", inplace=True)
+  ft_data.set_index("date", inplace=True)
   ft_data["date"] = ft_data["date"].dt.strftime('%Y-%m-%d')
 
 
