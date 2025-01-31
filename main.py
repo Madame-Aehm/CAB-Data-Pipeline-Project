@@ -43,8 +43,30 @@ def get_ft_data(date):
         scraped.append(result.select_one("p.o-teaser__standfirst > a").get_text())
       except:
         scraped.append("")
+      scraped.append("sentiment")
       scraped_date.append(tuple(scraped))
   return scraped_date
+
+def get_sentiment(data):
+  hf_api_key = os.getenv("HF_API_KEY")
+  url = "https://api-inference.huggingface.co/models/mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis"
+
+  payload = { "inputs": [post[2] for post in data] }
+  headers = { "Authorization": f"Bearer {hf_api_key}" }
+  response = requests.post(url, headers=headers, json=payload)
+
+  if response.status_code == 503:
+    headers["x-wait-for-model"] = "true"
+    response = requests.post(url, headers=headers, json=payload)
+
+  if response.status_code == 200:
+    sentiment_results = response.json()
+    if len(sentiment_results) == len(data):
+      for i in range(0, len(data)):
+        item_list = list(data[i])
+        item_list[-1] = sentiment_results[i][0]["label"]
+        data[i] = tuple(item_list)
+  return data
 
 
 def update_db(av_data, ft_data):
@@ -65,8 +87,8 @@ def update_db(av_data, ft_data):
   for item in ft_data:
     cur.execute(
       '''
-        INSERT INTO financial_times_scaped(date, tag, heading, link, teaser)
-        VALUES (%s, %s, %s, %s, %s);
+        INSERT INTO financial_times_scaped(date, tag, heading, link, teaser, sentiment)
+        VALUES (%s, %s, %s, %s, %s, %s);
       ''', 
       item
     )
@@ -83,7 +105,9 @@ def main():
   print("today is", today)
   av_data = get_av_data(today)
   ft_data = get_ft_data(today)
-  print("AV DATA", av_data, "FT DATA", ft_data)
+  ft_data = get_sentiment(ft_data)
+  # print("AV DATA", av_data)
+  # print("FT DATA", ft_data)
   update_db(av_data, ft_data)
   print("end")
 

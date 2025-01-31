@@ -17,18 +17,16 @@ def update_db(event, context):
       ''', 
       data
     )
-    print("av data successfully added to db")
 
   if execute_id == "ft_data":
     for item in data:
       cur.execute(
         '''
-          INSERT INTO financial_times_scaped(date, tag, heading, link, teaser)
-          VALUES (%s, %s, %s, %s, %s);
+          INSERT INTO financial_times_scaped(date, tag, heading, link, teaser, sentiment)
+          VALUES (%s, %s, %s, %s, %s, %s);
         ''', 
         item
       )
-    print("ft data successfully added to db")
 
   conn.commit()
   cur.close()
