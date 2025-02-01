@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 import os
 import requests
-import datetime as dt
+from datetime import datetime as dt, timedelta
 import psycopg
 import bs4
 
@@ -22,7 +22,7 @@ def get_ft_data(date):
   scraped_date = []
   print(response.status_code)
   if response.status_code == 200:
-    soup = bs4.BeautifulSoup(response.text, 'lxml')
+    soup = bs4.BeautifulSoup(response.text, 'html.parser')
     limit = 5
     search_results = soup.select("div.o-teaser__content", limit=limit)
     for result in search_results:
@@ -54,10 +54,12 @@ def get_sentiment(data):
   payload = { "inputs": [post[2] for post in data] }
   headers = { "Authorization": f"Bearer {hf_api_key}" }
   response = requests.post(url, headers=headers, json=payload)
+  print(response)
 
   if response.status_code == 503:
     headers["x-wait-for-model"] = "true"
     response = requests.post(url, headers=headers, json=payload)
+  print(response)
 
   if response.status_code == 200:
     sentiment_results = response.json()
@@ -101,14 +103,15 @@ def update_db(av_data, ft_data):
 
 def main():
   load_dotenv()
-  today = dt.datetime.today().strftime('%Y-%m-%d')
+  today = dt.today() - timedelta(1)
+  today = today.strftime('%Y-%m-%d')
   print("today is", today)
-  av_data = get_av_data(today)
+  # av_data = get_av_data(today)
   ft_data = get_ft_data(today)
   ft_data = get_sentiment(ft_data)
   # print("AV DATA", av_data)
-  # print("FT DATA", ft_data)
-  update_db(av_data, ft_data)
+  print("FT DATA", ft_data)
+  update_db(av_data=None, ft_data=ft_data)
   print("end")
 
 

@@ -1,36 +1,18 @@
-import requests
 import datetime as dt
-import bs4
+import os
+import requests
 
-def get_ft_data(event, context):
+
+def get_av_data(event, context):
   today = dt.datetime.today().strftime('%Y-%m-%d')
-  response = requests.get(f"https://www.ft.com/search?q=bitcoin&dateFrom={today}&dateTo={today}&sort=relevance")
-  scraped_data = []
+  api_key = os.getenv("AV_API_KEY")
+  response = requests.get(f"https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=BTC&market=EUR&apikey={api_key}")
   if response.status_code == 200:
-    soup = bs4.BeautifulSoup(response.text, 'html.parser')
-    limit = 5
-    search_results = soup.select("div.o-teaser__content", limit=limit)
-    for result in search_results:
-      scraped = [today]
-      try:
-        scraped.append(result.select_one("a.o-teaser__tag").get_text())
-      except:
-        scraped.append("")
-      try:
-        scraped.append(result.select_one("a.js-teaser-heading-link").get_text())
-      except:
-        scraped.append("")
-      try:
-        scraped.append(result.select_one("a.js-teaser-heading-link")["href"])
-      except:
-        scraped.append("")
-      try:
-        scraped.append(result.select_one("p.o-teaser__standfirst > a").get_text())
-      except:
-        scraped.append("")
-      scraped.append("sentiment")
-      scraped_data.append(tuple(scraped))
-  return {
-    "execute_id": "ft_data",
-    "data": scraped_data
-  }
+    data = response.json()
+    values = [today]
+    for value in data["Time Series (Digital Currency Daily)"][today].values():
+      values.append(float(value))
+    return {
+      "data": tuple(values),
+      "execute_id": "av_data"
+    }

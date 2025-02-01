@@ -20,11 +20,9 @@ def get_sentiment(event, context):
     sentiment_results = response.json()
     if len(sentiment_results) == len(data):
       for i in range(0, len(data)):
-        item_list = list(data[i])
-        item_list[-1] = sentiment_results[i][0]["label"]
-        data[i] = tuple(item_list)
+        data[i][-1] = sentiment_results[i][0]["label"]
+
   return {
     "execute_id": execute_id,
     "data": data
   }
-
