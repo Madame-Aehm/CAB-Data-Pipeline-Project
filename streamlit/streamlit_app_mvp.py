@@ -5,7 +5,7 @@ from datetime import datetime as dt, timedelta
 
 dbconn = st.secrets["DBCONN"]
 st.title("CAB Pipeline Project")
-st.write("This page uses data collected from the [Alpha Vantage API](https://www.alphavantage.co/) and [Financial Times](https://www.ft.com/).")
+st.write("This page uses data collected from the [Alpha Vantage API](https://www.alphavantage.co/) and [U.Today](https://u.today/).")
 
 ## AV DATA
 
