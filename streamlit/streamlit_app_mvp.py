@@ -60,7 +60,7 @@ def get_utoday_data(date):
 def get_oldest_date():
   conn = psycopg.connect(dbconn)
   cur = conn.cursor()
-  cur.execute("SELECT date FROM utoday_news ORDER BY date DESC LIMIT 1;")
+  cur.execute("SELECT date FROM utoday_news ORDER BY date LIMIT 1;")
   return cur.fetchall()[0][0].strftime("%Y-%m-%d")
 
 
