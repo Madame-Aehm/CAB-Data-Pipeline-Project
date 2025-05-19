@@ -43,12 +43,12 @@ def get_utoday_data(date):
     SELECT title, author, sentiment FROM utoday_news WHERE date = %s;
   ''', (date,))
   data = cur.fetchall()
-  print("DATA", data)
+  # print("DATA", data)
   utoday_data = pd.DataFrame(data, columns=["title", "author", "sentiment"])
   # utoday_data.set_index("title", inplace=True)
   # ft_data["date"] = ft_data["date"].dt.strftime('%Y-%m-%d')
   
-  print("UTODAY_DATA", utoday_data)
+  # print("UTODAY_DATA", utoday_data)
 
   conn.commit()
   cur.close()
@@ -66,13 +66,15 @@ def get_oldest_date():
 
 st.subheader("Bitcoin News")
 yesterday = dt.today() - timedelta(1)
+print("YESTERDAY", yesterday)
+print("OLDEST DATE", get_oldest_date())
 selected_date = st.date_input(
   "Select a date to see news articles from that day.", 
   value=yesterday, 
   max_value=yesterday, 
   min_value=get_oldest_date()
 )
-print(selected_date)
+
 utoday_data = get_utoday_data(selected_date)
 # st.dataframe(data=ft_data.drop(["link", "tag", "teaser"], axis="columns"))
 st.dataframe(data=utoday_data)
