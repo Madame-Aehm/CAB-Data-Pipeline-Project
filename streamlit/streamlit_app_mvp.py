@@ -57,6 +57,12 @@ def get_utoday_data(date):
   utoday_data.set_index("title", inplace=True)
   return utoday_data
 
+def get_oldest_date():
+  conn = psycopg.connect(dbconn)
+  cur = conn.cursor()
+  cur.execute("SELECT date FROM utoday_news ORDER BY date DESC LIMIT 1;")
+  return cur.fetchall()[0][0].strftime("%Y-%m-%d")
+
 
 st.subheader("Bitcoin News")
 yesterday = dt.today() - timedelta(1)
@@ -64,7 +70,7 @@ selected_date = st.date_input(
   "Select a date to see news articles from that day.", 
   value=yesterday, 
   max_value=yesterday, 
-  min_value="2025-03-28"
+  min_value=get_oldest_date()
 )
 print(selected_date)
 utoday_data = get_utoday_data(selected_date)
